@@ -39,6 +39,26 @@ ServerName:
   - '&b&l&nServerName'
   - '&e&lServerName'
   - '&e&n&lServerName'
+namcraft-title:
+  change-interval: 250
+  texts:
+  - '&e&lNamCraft SMP+'
+  - '&6&lNamCraft SMP+'
+  - '&f&lNamCraft SMP+'
+  - '&6&lNamCraft SMP+'
+namcraft-online:
+  change-interval: 350
+  texts:
+  - '&a%online% &fPLAYERS'
+  - '&2%online% &aPLAYERS'
+  - '&a%online% &fPLAYERS'
+namcraft-store:
+  change-interval: 220
+  texts:
+  - '&6STORE.NAMCRAFT.CITY'
+  - '&eSTORE.NAMCRAFT.CITY'
+  - '&fSTORE.NAMCRAFT.CITY'
+  - '&eSTORE.NAMCRAFT.CITY'
 web:
   change-interval: 200
   texts:

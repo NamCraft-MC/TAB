@@ -75,7 +75,7 @@ public class MessageFile extends YamlConfigurationFile {
     // ------------------
 
     private final List<String> nameTagHelpMenu = getStringList("nametag.help-menu", Arrays.asList(
-            "/tab nametag <show/hide/toggle> [player] [-s] - Toggles nametag of specified player",
+            "/tab nametag <show/solid/normal/opaque/hide/toggle> [player] [-s] - Toggles nametag of specified player",
             "/tab nametag <showview/hideview/toggleview> [player] [viewer] [-s] - Toggles nametag VIEW of specified player on other player(s)"
     ));
     private final String nameTagFeatureNotEnabled = getString("nametag.feature-not-enabled", "&cThis command requires nametag feature to be enabled.");

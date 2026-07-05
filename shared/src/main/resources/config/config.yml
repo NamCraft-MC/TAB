@@ -10,23 +10,22 @@ header-footer:
         - "Test footer in world 'test'"
     default:
       header:
-        - "<#FFFFFF>&m                                                </#FFFF00>"
-        - "&3&lServer name"
-        - "&r&7&l>> %animation:Welcome%&3 &l%player%&7&l! &7&l<<"
-        - "&r&7Online players: &f%online%"
-        - "&6Online staff: &e%staffonline%"
+        - ""
+        - "%animation:namcraft-title%"
+        - "&fSURVIVAL CLASSIC"
+        - ""
+        - "%animation:namcraft-online%"
         - ""
       footer:
-        - "%animation:time%"
-        - "&2Ping: %ping%"
-        - "&7&l Used memory: %memory-used% MB / %memory-max% MB"
         - ""
-        - "&r&7Visit our webpage %animation:web%"
-        - "<#FFFFFF>&m                                                </#FFFF00>"
+        - "&fสนับสนุนเซิร์ฟเวอร์ได้ที่"
+        - "%animation:namcraft-store%"
+        - ""
 
 # https://github.com/NEZNAMY/TAB/wiki/Feature-guide:-Tablist-name-formatting
 tablist-name-formatting:
   enabled: true
+  inherit-prefix-color-to-name: true
   disable-condition: '%world%=disabledworld'
 
 # https://github.com/NEZNAMY/TAB/wiki/Feature-guide:-Nametags
@@ -79,43 +78,41 @@ bossbar:
 
 # https://github.com/NEZNAMY/TAB/wiki/Feature-guide:-Scoreboard
 scoreboard:
-  enabled: false
+  enabled: true
   toggle-command: /sb
   remember-toggle-choice: false
   hidden-by-default: false
   delay-on-join-milliseconds: 0
   scoreboards:
     scoreboard-1.20.3+:
-      title: "<#E0B11E>MyServer</#FF0000>"
+      title: "%animation:namcraft-title%"
       display-condition: "%player-version-id%>=765;%bedrock%=false" # Only display it to players using 1.20.3+ AND NOT bedrock edition
       lines:
-        - "&7%date%"
-        - "%animation:MyAnimation1%"
-        - "&6Online:"
-        - "* &eOnline&7:||%online%"
-        - "* &eCurrent World&7:||%worldonline%"
-        - "* &eStaff&7:||%staffonline%"
         - ""
-        - "&6Personal Info:"
-        - "* &bRank&7:||%group%"
-        - "* &bPing&7:||%ping%&8ms"
-        - "* &bWorld&7:||%world%"
-        - "%animation:MyAnimation1%"
+        - "&fplay.namcraft.city"
+        - ""
+        - "%namservercore_tab_head% &f%player%"
+        - "&6$ &fเงิน &e%namcoins_money%"
+        - "&bP &fพ้อย &b%namcoins_points%"
+        - "&a⌚ &fออนไลน์ &a%namservercore_playtime%"
+        - "&c⚔ &fฆ่า/ตาย &c%namservercore_kills%&7/&c%namservercore_deaths%"
+        - "&e⚡ &fเน็ต &e%ping%ms"
+        - "&9⚑ &fทีม &9%namservercore_team%"
+        - ""
     scoreboard:
-      title: "<#E0B11E>MyServer</#FF0000>"
+      title: "%animation:namcraft-title%"
       lines:
-        - "&7%date%"
-        - "%animation:MyAnimation1%"
-        - "&6Online:"
-        - "* &eOnline&7: &f%online%"
-        - "* &eCurrent World&7: &f%worldonline%"
-        - "* &eStaff&7: &f%staffonline%"
         - ""
-        - "&6Personal Info:"
-        - "* &bRank&7: &f%group%"
-        - "* &bPing&7: &f%ping%&8ms"
-        - "* &bWorld&7: &f%world%"
-        - "%animation:MyAnimation1%"
+        - "&fplay.namcraft.city"
+        - ""
+        - "%namservercore_tab_head% &f%player%"
+        - "&6$ &fเงิน &e%namcoins_money%"
+        - "&bP &fพ้อย &b%namcoins_points%"
+        - "&a⌚ &fออนไลน์ &a%namservercore_playtime%"
+        - "&c⚔ &fฆ่า/ตาย &c%namservercore_kills%&7/&c%namservercore_deaths%"
+        - "&e⚡ &fเน็ต &e%ping%ms"
+        - "&9⚑ &fทีม &9%namservercore_team%"
+        - ""
 
 # https://github.com/NEZNAMY/TAB/wiki/Feature-guide:-Layout
 layout:
@@ -207,6 +204,14 @@ placeholder-refresh-intervals:
   "%player_health%": 200
   "%player_ping%": 1000
   "%vault_prefix%": 1000
+  "%namservercore_tab_head%": 500
+  "%namservercore_playtime%": 1000
+  "%namservercore_kills%": 1000
+  "%namservercore_deaths%": 1000
+  "%namservercore_team%": 1000
+  "%namcoins_money%": 1000
+  "%namcoins_points%": 1000
+  "%namcore_tab_head%": 500
   "%rel_factionsuuid_relation_color%": 1000
 
 # assigning groups by permission nodes instead of taking them from permission plugin

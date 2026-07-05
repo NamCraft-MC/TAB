@@ -14,6 +14,9 @@ import me.neznamy.tab.shared.placeholders.conditions.Condition;
 import me.neznamy.tab.shared.platform.Scoreboard;
 import me.neznamy.tab.shared.platform.TabPlayer;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.lang.reflect.Method;
 
 /**
  * Sub-feature for NameTag feature that manages nametag visibility.
@@ -58,6 +61,8 @@ public class VisibilityManager extends RefreshableFeature implements JoinListene
         for (TabPlayer all : nameTags.getOnlinePlayers().getPlayers()) {
             onJoin(all);
         }
+        getCustomThread().repeatTask(new TimedCaughtTask(TAB.getInstance().getCpu(),
+                this::requestSolidOcclusionRefresh, getFeatureName(), "Updating solid nametag occlusion"), 250);
     }
 
     @Override
@@ -132,6 +137,7 @@ public class VisibilityManager extends RefreshableFeature implements JoinListene
                             boolean sendMessage) {
         ensureActive();
         getCustomThread().execute(new TimedCaughtTask(TAB.getInstance().getCpu(), () -> {
+            clearSolidNameTagMode(player, null);
             if (player.teamData.hideNametag(reason)) {
                 updateVisibility(player);
             }
@@ -143,6 +149,7 @@ public class VisibilityManager extends RefreshableFeature implements JoinListene
                             @NonNull String cpuReason, boolean sendMessage) {
         ensureActive();
         getCustomThread().execute(new TimedCaughtTask(TAB.getInstance().getCpu(), () -> {
+            clearSolidNameTagMode(player, viewer);
             if (player.teamData.hideNametag(viewer, reason)) {
                 updateVisibility(player, viewer);
             }
@@ -154,6 +161,7 @@ public class VisibilityManager extends RefreshableFeature implements JoinListene
                             boolean sendMessage) {
         ensureActive();
         getCustomThread().execute(new TimedCaughtTask(TAB.getInstance().getCpu(), () -> {
+            clearSolidNameTagMode(player, null);
             if (player.teamData.showNametag(reason)) {
                 updateVisibility(player);
             }
@@ -165,6 +173,7 @@ public class VisibilityManager extends RefreshableFeature implements JoinListene
                             @NonNull String cpuReason, boolean sendMessage) {
         ensureActive();
         getCustomThread().execute(new TimedCaughtTask(TAB.getInstance().getCpu(), () -> {
+            clearSolidNameTagMode(player, viewer);
             if (player.teamData.showNametag(viewer, reason)) {
                 updateVisibility(player, viewer);
             }
@@ -176,6 +185,7 @@ public class VisibilityManager extends RefreshableFeature implements JoinListene
                               boolean sendMessage) {
         ensureActive();
         getCustomThread().execute(new TimedCaughtTask(TAB.getInstance().getCpu(), () -> {
+            clearSolidNameTagMode(player, null);
             if (player.teamData.hasHiddenNametag(reason)) {
                 player.teamData.showNametag(reason);
                 if (sendMessage) player.sendMessage(TAB.getInstance().getConfiguration().getMessages().getNameTagTargetShown());
@@ -191,6 +201,7 @@ public class VisibilityManager extends RefreshableFeature implements JoinListene
                               @NonNull String cpuReason, boolean sendMessage) {
         ensureActive();
         getCustomThread().execute(new TimedCaughtTask(TAB.getInstance().getCpu(), () -> {
+            clearSolidNameTagMode(player, viewer);
             if (player.teamData.hasHiddenNametag(viewer, reason)) {
                 player.teamData.showNametag(viewer, reason);
                 if (sendMessage) player.sendMessage(TAB.getInstance().getConfiguration().getMessages().getNameTagTargetShown());
@@ -200,5 +211,83 @@ public class VisibilityManager extends RefreshableFeature implements JoinListene
             }
             updateVisibility(player, viewer);
         }, getFeatureName(), cpuReason));
+    }
+
+    public void setSolidNameTag(@NonNull TabPlayer player, @Nullable TabPlayer viewer, @NonNull String cpuReason,
+                                boolean sendMessage) {
+        ensureActive();
+        getCustomThread().execute(new TimedCaughtTask(TAB.getInstance().getCpu(), () -> {
+            player.teamData.setSolidNametagMode(viewer, true);
+            if (viewer != null) {
+                player.teamData.showNametag(viewer, NameTagInvisibilityReason.HIDE_COMMAND);
+                player.teamData.showNametag(viewer, NameTagInvisibilityReason.SOLID_OCCLUSION);
+                updateVisibility(player, viewer);
+            } else {
+                player.teamData.showNametag(NameTagInvisibilityReason.HIDE_COMMAND);
+                for (TabPlayer currentViewer : nameTags.getOnlinePlayers().getPlayers()) {
+                    player.teamData.showNametag(currentViewer, NameTagInvisibilityReason.SOLID_OCCLUSION);
+                }
+                updateVisibility(player);
+            }
+            requestSolidOcclusionRefresh();
+            if (sendMessage) player.sendMessage(TAB.getInstance().getConfiguration().getMessages().getNameTagTargetShown());
+        }, getFeatureName(), cpuReason));
+    }
+
+    private void requestSolidOcclusionRefresh() {
+        TAB.getInstance().getPlatform().runSyncGlobal(this::refreshSolidOcclusion);
+    }
+
+    private void refreshSolidOcclusion() {
+        for (TabPlayer player : nameTags.getOnlinePlayers().getPlayers()) {
+            if (!player.teamData.hasSolidNametagMode() || player.teamData.isDisabled()) continue;
+            for (TabPlayer viewer : nameTags.getOnlinePlayers().getPlayers()) {
+                if (!player.teamData.isSolidNametagMode(viewer)) {
+                    if (player.teamData.showNametag(viewer, NameTagInvisibilityReason.SOLID_OCCLUSION)) {
+                        updateVisibility(player, viewer);
+                    }
+                    continue;
+                }
+                boolean visible = viewer == player || hasLineOfSight(viewer, player);
+                boolean changed = visible
+                        ? player.teamData.showNametag(viewer, NameTagInvisibilityReason.SOLID_OCCLUSION)
+                        : player.teamData.hideNametag(viewer, NameTagInvisibilityReason.SOLID_OCCLUSION);
+                if (changed) updateVisibility(player, viewer);
+            }
+        }
+    }
+
+    private void clearSolidNameTagMode(@NonNull TabPlayer player, @Nullable TabPlayer viewer) {
+        player.teamData.setSolidNametagMode(viewer, false);
+        if (viewer != null) {
+            if (player.teamData.showNametag(viewer, NameTagInvisibilityReason.SOLID_OCCLUSION)) {
+                updateVisibility(player, viewer);
+            }
+        } else {
+            for (TabPlayer currentViewer : nameTags.getOnlinePlayers().getPlayers()) {
+                if (player.teamData.showNametag(currentViewer, NameTagInvisibilityReason.SOLID_OCCLUSION)) {
+                    updateVisibility(player, currentViewer);
+                }
+            }
+        }
+    }
+
+    private boolean hasLineOfSight(@NonNull TabPlayer viewer, @NonNull TabPlayer target) {
+        if (!viewer.server.canSee(target.server)) return false;
+        if (viewer.world != target.world) return false;
+        if (!viewer.canSee(target)) return false;
+        Object viewerObject = viewer.getPlayer();
+        Object targetObject = target.getPlayer();
+        try {
+            for (Method method : viewerObject.getClass().getMethods()) {
+                if (!method.getName().equals("hasLineOfSight") || method.getParameterCount() != 1) continue;
+                if (!method.getParameterTypes()[0].isInstance(targetObject)) continue;
+                Object result = method.invoke(viewerObject, targetObject);
+                return result instanceof Boolean ? (Boolean) result : true;
+            }
+        } catch (ReflectiveOperationException ignored) {
+            return true;
+        }
+        return true;
     }
 }

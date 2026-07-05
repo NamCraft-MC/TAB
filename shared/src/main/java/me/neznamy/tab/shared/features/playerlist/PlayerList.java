@@ -17,6 +17,7 @@ import me.neznamy.tab.shared.features.proxy.ProxySupport;
 import me.neznamy.tab.shared.features.types.*;
 import me.neznamy.tab.shared.platform.TabPlayer;
 import me.neznamy.tab.shared.util.DumpUtils;
+import me.neznamy.tab.shared.util.NameColorResolver;
 import me.neznamy.tab.shared.util.cache.StringToComponentCache;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -123,7 +124,12 @@ public class PlayerList extends RefreshableFeature implements TabListFormatManag
         if (prefix == null || name == null || suffix == null) {
             return null;
         }
-        return cache.get(prefix.getFormat(viewer) + name.getFormat(viewer) + suffix.getFormat(viewer));
+        String prefixFormat = prefix.getFormat(viewer);
+        String nameFormat = name.getFormat(viewer);
+        if (configuration.isInheritPrefixColorToName() && !NameColorResolver.startsWithFormatting(nameFormat)) {
+            nameFormat = NameColorResolver.lastColorCode(prefixFormat) + nameFormat;
+        }
+        return cache.get(prefixFormat + nameFormat + suffix.getFormat(viewer));
     }
 
     @Override

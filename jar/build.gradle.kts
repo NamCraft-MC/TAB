@@ -7,51 +7,15 @@ plugins {
     id("com.gradleup.shadow")
 }
 
-val brokenPlatformPaths = setOf(
-    ":bukkit:paper_1_20_5",
-    ":bukkit:paper_1_21_2",
-    ":bukkit:paper_1_21_4"
-)
+val brokenPlatformPaths = emptySet<String>()
 
 val platformPaths = setOf(
     ":bukkit",
-    ":bukkit:paper_1_20_5",
-    ":bukkit:paper_1_21_2",
-    ":bukkit:paper_1_21_4",
-    ":bukkit:paper_1_21_9",
     ":bukkit:paper_1_21_11",
-    ":bukkit:paper_26_2",
-    ":bukkit:v1_7_R4",
-    ":bukkit:v1_8_R3",
-    ":bukkit:v1_12_R1",
-    ":bukkit:v1_16_R3",
-    ":bukkit:v1_17_R1",
-    ":bukkit:v1_18_R2",
-    ":bukkit:v1_19_R1",
-    ":bukkit:v1_19_R2",
-    ":bukkit:v1_19_R3",
-    ":bukkit:v1_20_R1",
-    ":bukkit:v1_20_R2",
-    ":bukkit:v1_20_R3",
-    ":bukkit:v1_20_R4",
-    ":bukkit:v1_21_R1",
-    ":bukkit:v1_21_R2",
-    ":bukkit:v1_21_R3",
-    ":bukkit:v1_21_R4",
-    ":bukkit:v1_21_R5",
-    ":bukkit:v1_21_R6",
-    ":bukkit:v1_21_R7",
-    ":bukkit:v26_1",
-    ":bukkit:v26_2",
-    ":bungeecord",
-    ":velocity"
+    ":bukkit:v26_1"
 )
 
-val moddedPaths = setOf(
-    ":fabric",
-    ":neoforge",
-    ":forge"
-)
+val moddedPaths = emptySet<String>()
 
 val brokenPlatforms: List<Project> = brokenPlatformPaths.map { rootProject.project(it) }
 val platforms: List<Project> = platformPaths.map { rootProject.project(it) }
@@ -96,5 +60,5 @@ tasks {
         }
     }
 
-    build.get().dependsOn(shadowJar, shadowJarBrokenPaper)
+    build.get().dependsOn(shadowJar)
 }

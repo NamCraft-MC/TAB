@@ -5,6 +5,7 @@ import me.neznamy.tab.shared.features.proxy.ProxyPlayer;
 import me.neznamy.tab.shared.features.types.ProxyFeature;
 import me.neznamy.tab.shared.platform.Scoreboard;
 import me.neznamy.tab.shared.platform.TabPlayer;
+import me.neznamy.tab.shared.util.NameColorResolver;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
@@ -26,7 +27,7 @@ public class NameTagProxyHandler implements ProxyFeature {
                     feature.getProxy().getIdCounter().incrementAndGet(),
                     player.getUniqueId(),
                     player.teamData.teamName,
-                    player.teamData.prefix.get(),
+                    NameColorResolver.trimTrailingFormatting(player.teamData.prefix.get()),
                     player.teamData.suffix.get(),
                     player.teamData.getTeamVisibility(player) ? Scoreboard.NameVisibility.ALWAYS : Scoreboard.NameVisibility.NEVER,
                     player.teamData.isDisabled()
@@ -58,13 +59,13 @@ public class NameTagProxyHandler implements ProxyFeature {
             viewer.teamData.registerTeam(
                     player,
                     player.getNametag().getResolvedTeamName(),
-                    feature.getPrefixCache().get(player.getNametag().getPrefix()),
+                    feature.getPrefixCache().get(NameColorResolver.trimTrailingFormatting(player.getNametag().getPrefix())),
                     feature.getSuffixCache().get(player.getNametag().getSuffix()),
                     player.getNametag().getNameVisibility(),
                     Scoreboard.CollisionRule.ALWAYS,
                     Collections.singletonList(player.getNickname()),
                     feature.getTeamOptions(),
-                    feature.getLastColorCache().get(player.getNametag().getPrefix()).getLastStyle().toEnumChatFormat()
+                    feature.getNametagNameColor()
             );
         }
     }

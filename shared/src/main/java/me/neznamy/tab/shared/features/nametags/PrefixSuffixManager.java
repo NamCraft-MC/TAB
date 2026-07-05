@@ -7,6 +7,7 @@ import me.neznamy.tab.shared.data.Server;
 import me.neznamy.tab.shared.data.World;
 import me.neznamy.tab.shared.features.types.*;
 import me.neznamy.tab.shared.platform.TabPlayer;
+import me.neznamy.tab.shared.util.NameColorResolver;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -83,9 +84,9 @@ public class PrefixSuffixManager extends RefreshableFeature implements GroupList
             if (viewer.teamData.hasTeamRegistered(player)) {
                 viewer.getScoreboard().updateTeam(
                         player.teamData.teamName,
-                        feature.getPrefixCache().get(player.teamData.prefix.getFormat(viewer)),
+                        feature.getPrefixCache().get(NameColorResolver.trimTrailingFormatting(player.teamData.prefix.getFormat(viewer))),
                         feature.getSuffixCache().get(player.teamData.suffix.getFormat(viewer)),
-                        feature.getLastColorCache().get(player.teamData.prefix.getFormat(viewer)).getLastStyle().toEnumChatFormat()
+                        feature.getNametagNameColor()
                 );
             }
         }

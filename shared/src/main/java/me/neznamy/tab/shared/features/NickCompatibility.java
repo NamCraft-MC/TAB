@@ -14,6 +14,7 @@ import me.neznamy.tab.shared.features.types.EntryAddListener;
 import me.neznamy.tab.shared.features.types.TabFeature;
 import me.neznamy.tab.shared.platform.Scoreboard;
 import me.neznamy.tab.shared.platform.TabPlayer;
+import me.neznamy.tab.shared.util.NameColorResolver;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -72,13 +73,13 @@ public class NickCompatibility extends TabFeature implements EntryAddListener {
                     viewer.teamData.registerTeam(
                             player,
                             player.sortingData.getShortTeamName(),
-                            nameTags.getPrefixCache().get(player.teamData.prefix.getFormat(viewer)),
+                            nameTags.getPrefixCache().get(NameColorResolver.trimTrailingFormatting(player.teamData.prefix.getFormat(viewer))),
                             nameTags.getSuffixCache().get(player.teamData.suffix.getFormat(viewer)),
                             player.teamData.getTeamVisibility(viewer) ? Scoreboard.NameVisibility.ALWAYS : Scoreboard.NameVisibility.NEVER,
                             player.teamData.getCollisionRule() ? Scoreboard.CollisionRule.ALWAYS : Scoreboard.CollisionRule.NEVER,
                             Collections.singletonList(player.getNickname()),
                             nameTags.getTeamOptions(),
-                            nameTags.getLastColorCache().get(player.teamData.prefix.getFormat(viewer)).getLastStyle().toEnumChatFormat()
+                            nameTags.getNametagNameColor()
                     );
                 }
             if (belowname != null) belowname.processNicknameChange(player);
@@ -96,13 +97,13 @@ public class NickCompatibility extends TabFeature implements EntryAddListener {
                     viewer.teamData.registerTeam(
                             player,
                             teamName,
-                            player.getNametag().getFeature().getPrefixCache().get(player.getNametag().getPrefix()),
+                            player.getNametag().getFeature().getPrefixCache().get(NameColorResolver.trimTrailingFormatting(player.getNametag().getPrefix())),
                             player.getNametag().getFeature().getSuffixCache().get(player.getNametag().getSuffix()),
                             player.getNametag().getNameVisibility(),
                             Scoreboard.CollisionRule.ALWAYS,
                             Collections.singletonList(player.getNickname()),
                             nameTags.getTeamOptions(),
-                            player.getNametag().getFeature().getLastColorCache().get(player.getNametag().getPrefix()).getLastStyle().toEnumChatFormat()
+                            nameTags.getNametagNameColor()
                     );
                 }
             }

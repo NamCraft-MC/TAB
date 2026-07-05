@@ -14,6 +14,7 @@ import me.neznamy.tab.shared.features.proxy.QueuedData;
 import me.neznamy.tab.shared.features.proxy.message.ProxyMessage;
 import me.neznamy.tab.shared.platform.Scoreboard;
 import me.neznamy.tab.shared.platform.TabPlayer;
+import me.neznamy.tab.shared.util.NameColorResolver;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -94,8 +95,7 @@ public class NameTagProxyPlayerData extends ProxyMessage {
         target.setNametag(this);
 
         if (target.getConnectionState() == ProxyPlayer.ConnectionState.CONNECTED) {
-            TabComponent prefix = feature.getPrefixCache().get(this.prefix);
-            TabComponent lastColor = feature.getLastColorCache().get(this.prefix);
+            TabComponent prefix = feature.getPrefixCache().get(NameColorResolver.trimTrailingFormatting(this.prefix));
             TabComponent suffix = feature.getSuffixCache().get(this.suffix);
             for (TabPlayer viewer : feature.getOnlinePlayers().getPlayers()) {
                 if (oldData != null && !oldData.disabled && disabled) {
@@ -114,7 +114,7 @@ public class NameTagProxyPlayerData extends ProxyMessage {
                             Scoreboard.CollisionRule.ALWAYS,
                             Collections.singletonList(target.getNickname()),
                             feature.getTeamOptions(),
-                            lastColor.getLastStyle().toEnumChatFormat()
+                            feature.getNametagNameColor()
                     );
                     continue;
                 }
@@ -128,7 +128,7 @@ public class NameTagProxyPlayerData extends ProxyMessage {
                                 nameVisibility,
                                 Scoreboard.CollisionRule.ALWAYS,
                                 feature.getTeamOptions(),
-                                lastColor.getLastStyle().toEnumChatFormat()
+                                feature.getNametagNameColor()
                         );
                     }
                 } else {
@@ -143,7 +143,7 @@ public class NameTagProxyPlayerData extends ProxyMessage {
                             Scoreboard.CollisionRule.ALWAYS,
                             Collections.singletonList(target.getNickname()),
                             feature.getTeamOptions(),
-                            lastColor.getLastStyle().toEnumChatFormat()
+                            feature.getNametagNameColor()
                     );
                 }
             }

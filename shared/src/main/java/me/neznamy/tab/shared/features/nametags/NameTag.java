@@ -6,6 +6,7 @@ import me.neznamy.tab.api.nametag.NameTagManager;
 import me.neznamy.tab.shared.Property;
 import me.neznamy.tab.shared.TAB;
 import me.neznamy.tab.shared.TabConstants;
+import me.neznamy.tab.shared.chat.EnumChatFormat;
 import me.neznamy.tab.shared.config.MessageFile;
 import me.neznamy.tab.shared.cpu.ThreadExecutor;
 import me.neznamy.tab.shared.cpu.TimedCaughtTask;
@@ -17,6 +18,7 @@ import me.neznamy.tab.shared.platform.Scoreboard.CollisionRule;
 import me.neznamy.tab.shared.platform.Scoreboard.NameVisibility;
 import me.neznamy.tab.shared.platform.TabPlayer;
 import me.neznamy.tab.shared.util.DumpUtils;
+import me.neznamy.tab.shared.util.NameColorResolver;
 import me.neznamy.tab.shared.util.OnlinePlayers;
 import me.neznamy.tab.shared.util.cache.LastColorCache;
 import me.neznamy.tab.shared.util.cache.StringToComponentCache;
@@ -43,6 +45,7 @@ public class NameTag extends TabFeature implements NameTagManager, JoinListener,
     @Nullable private final ProxySupport proxy = TAB.getInstance().getFeatureManager().getFeature(TabConstants.Feature.PROXY_SUPPORT);
     private final NameTagProxyHandler proxyHandler = new NameTagProxyHandler(this);
     private final PrefixSuffixManager prefixSuffixManager = new PrefixSuffixManager(this);
+    private static final EnumChatFormat NAMCRAFT_NAMETAG_NAME_COLOR = EnumChatFormat.WHITE;
 
     /**
      * Constructs new instance and registers sub-features.
@@ -126,13 +129,13 @@ public class NameTag extends TabFeature implements NameTagManager, JoinListener,
                 connectedPlayer.teamData.registerTeam(
                         proxied,
                         proxied.getNametag().getResolvedTeamName(),
-                        prefixCache.get(proxied.getNametag().getPrefix()),
+                        prefixCache.get(NameColorResolver.trimTrailingFormatting(proxied.getNametag().getPrefix())),
                         suffixCache.get(proxied.getNametag().getSuffix()),
                         proxied.getNametag().getNameVisibility(),
                         CollisionRule.ALWAYS,
                         Collections.singletonList(proxied.getNickname()),
                         teamOptions,
-                        lastColorCache.get(proxied.getNametag().getPrefix()).getLastStyle().toEnumChatFormat()
+                        getNametagNameColor()
                 );
             }
             proxyHandler.sendProxyMessage(connectedPlayer);
@@ -246,15 +249,20 @@ public class NameTag extends TabFeature implements NameTagManager, JoinListener,
             viewer.teamData.registerTeam(
                     p,
                     p.teamData.teamName,
-                    prefixCache.get(p.teamData.prefix.getFormat(viewer)),
+                    prefixCache.get(NameColorResolver.trimTrailingFormatting(p.teamData.prefix.getFormat(viewer))),
                     suffixCache.get(p.teamData.suffix.getFormat(viewer)),
                     p.teamData.getTeamVisibility(viewer) ? NameVisibility.ALWAYS : NameVisibility.NEVER,
                     p.teamData.getCollisionRule() ? CollisionRule.ALWAYS : CollisionRule.NEVER,
                     Collections.singletonList(p.getNickname()),
                     teamOptions,
-                    lastColorCache.get(p.teamData.prefix.getFormat(viewer)).getLastStyle().toEnumChatFormat()
+                    getNametagNameColor()
             );
         }
+    }
+
+    @NotNull
+    public EnumChatFormat getNametagNameColor() {
+        return NAMCRAFT_NAMETAG_NAME_COLOR;
     }
 
     private boolean shouldRegister(@NotNull TabPlayer teamOwner, @NonNull TabPlayer viewer) {
@@ -333,7 +341,7 @@ public class NameTag extends TabFeature implements NameTagManager, JoinListener,
         List<List<String>> players = Arrays.stream(TAB.getInstance().getOnlinePlayers()).map(p -> Arrays.asList(
                 p.getName(),
                 "\"" + p.teamData.prefix.get() + "\"",
-                lastColorCache.get(p.teamData.prefix.getFormat(p)).getLastStyle().toEnumChatFormat().name(),
+                getNametagNameColor().name(),
                 "\"" + p.teamData.suffix.get() + "\"",
                 String.valueOf(p.teamData.disabled.get())
         )).collect(Collectors.toList());
@@ -341,7 +349,7 @@ public class NameTag extends TabFeature implements NameTagManager, JoinListener,
             players.addAll(proxy.getProxyPlayers().values().stream().map(p -> Arrays.asList(
                     "[Proxy] " + p.getName(),
                     p.getNametag() == null ? "NULL" : "\"" + p.getNametag().getPrefix() + "\"",
-                    p.getNametag() == null ? "NULL" : lastColorCache.get(p.getNametag().getPrefix()).getLastStyle().toEnumChatFormat().name(),
+                    p.getNametag() == null ? "NULL" : getNametagNameColor().name(),
                     p.getNametag() == null ? "NULL" : "\"" + p.getNametag().getSuffix() + "\"",
                     p.getNametag() == null ? "NULL" : String.valueOf(p.getNametag().isDisabled())
             )).collect(Collectors.toList()));

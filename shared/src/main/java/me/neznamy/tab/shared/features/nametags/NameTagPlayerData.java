@@ -42,6 +42,12 @@ public class NameTagPlayerData {
     /** Flag tracking whether this player disabled nametags on all players or not */
     public boolean invisibleNameTagView;
 
+    /** Whether NamCraft solid nametag mode is enabled for all viewers */
+    public boolean solidNametagMode;
+
+    /** Viewers with NamCraft solid nametag mode enabled only for them */
+    private final Set<TabPlayer> solidNametagViewers = Collections.newSetFromMap(new WeakHashMap<>());
+
     /** Players who this player is vanished for */
     public final Set<UUID> vanishedFor = new HashSet<>();
 
@@ -199,6 +205,25 @@ public class NameTagPlayerData {
         if (viewer.teamData.invisibleNameTagView) return false; // Viewer does not want to see nametags
         if (viewer.getVersion() == ProtocolVersion.V1_8 && player.hasInvisibilityPotion()) return false;
         return true;
+    }
+
+    public boolean isSolidNametagMode(@NotNull TabPlayer viewer) {
+        return solidNametagMode || solidNametagViewers.contains(viewer);
+    }
+
+    public void setSolidNametagMode(@Nullable TabPlayer viewer, boolean enabled) {
+        if (viewer == null) {
+            solidNametagMode = enabled;
+            if (!enabled) solidNametagViewers.clear();
+        } else if (enabled) {
+            solidNametagViewers.add(viewer);
+        } else {
+            solidNametagViewers.remove(viewer);
+        }
+    }
+
+    public boolean hasSolidNametagMode() {
+        return solidNametagMode || !solidNametagViewers.isEmpty();
     }
 
     public void registerTeam(@NotNull TabPlayer target, @NotNull String teamName, @NotNull TabComponent prefix, @NotNull TabComponent suffix,

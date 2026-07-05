@@ -251,4 +251,15 @@ public interface Platform {
      */
     @NotNull
     Object dump();
+
+    /**
+     * Runs task in the global server thread when the platform requires it.
+     * Platforms without a server thread requirement can run the task directly.
+     *
+     * @param   task
+     *          Task to run
+     */
+    default void runSyncGlobal(@NotNull Runnable task) {
+        task.run();
+    }
 }

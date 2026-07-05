@@ -12,5 +12,8 @@ public enum NameTagInvisibilityReason {
     MEETING_CONFIGURED_CONDITION,
 
     /** /tab nametag hide command */
-    HIDE_COMMAND
+    HIDE_COMMAND,
+
+    /** NamCraft solid nametag mode hides nametag from viewers without line of sight */
+    SOLID_OCCLUSION
 }

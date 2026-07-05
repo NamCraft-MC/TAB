@@ -16,6 +16,7 @@ public class TablistFormattingConfiguration {
 
     @NotNull private final ConfigurationSection section;
     @NotNull private final String disableCondition;
+    private final boolean inheritPrefixColorToName;
 
     /**
      * Returns instance of this class created from given configuration section. If there are
@@ -28,8 +29,12 @@ public class TablistFormattingConfiguration {
     @NotNull
     public static TablistFormattingConfiguration fromSection(@NotNull ConfigurationSection section) {
         // Check keys
-        section.checkForUnknownKey(Arrays.asList("enabled", "disable-condition"));
+        section.checkForUnknownKey(Arrays.asList("enabled", "disable-condition", "inherit-prefix-color-to-name"));
 
-        return new TablistFormattingConfiguration(section, section.getString("disable-condition", "%world%=disabledworld"));
+        return new TablistFormattingConfiguration(
+                section,
+                section.getString("disable-condition", "%world%=disabledworld"),
+                section.getBoolean("inherit-prefix-color-to-name", true)
+        );
     }
 }

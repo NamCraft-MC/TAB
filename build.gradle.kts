@@ -4,12 +4,12 @@ plugins {
 
 allprojects {
     group = "me.neznamy"
-    version = "6.1.1-SNAPSHOT"
-    description = "An all-in-one solution that works"
+    version = "6.1.0-namcraft"
+    description = "NamCraft fork of TAB 6.1.0 with prefix-inherited player name colors and NamServerCore integration. Do not replace with upstream TAB without porting NamCraft patches."
 
     ext.set("id", "tab")
     ext.set("website", "https://github.com/NEZNAMY/TAB")
-    ext.set("author", "NEZNAMY")
+    ext.set("author", "Nattapat2871")
     ext.set("credits", "Joseph T. McQuigg (JT122406)")
 }
 
