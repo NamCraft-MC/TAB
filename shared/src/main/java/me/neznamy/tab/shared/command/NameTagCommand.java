@@ -16,14 +16,14 @@ import java.util.Locale;
 /**
  * Handler for "/tab nametag" subcommand.
  * Options:
- *   /tab nametag show/solid/normal/opaque/hide/toggle [player] [viewer] [-s]
- *   /tab nametag showview/hideview/toggleview [viewer] [-s]
+ *   /tab nametag show/opaque/hide/toggle [player] [viewer] [-s]
+ *   /tab nametag showview/opaqueview/hideview/toggleview [viewer] [-s]
  */
 public class NameTagCommand extends SubCommand {
 
-    private static final List<String> TARGET_ACTIONS = Arrays.asList("show", "solid", "normal", "opaque", "hide", "toggle");
-    private static final List<String> VIEW_ACTIONS = Arrays.asList("showview", "hideview", "toggleview");
-    private static final List<String> ALL_ACTIONS = Arrays.asList("show", "solid", "normal", "opaque", "hide", "toggle", "showview", "hideview", "toggleview");
+    private static final List<String> TARGET_ACTIONS = Arrays.asList("show", "opaque", "hide", "toggle");
+    private static final List<String> VIEW_ACTIONS = Arrays.asList("showview", "opaqueview", "hideview", "toggleview");
+    private static final List<String> ALL_ACTIONS = Arrays.asList("show", "opaque", "hide", "toggle", "showview", "opaqueview", "hideview", "toggleview");
 
     /**
      * Constructs new instance
@@ -79,9 +79,9 @@ public class NameTagCommand extends SubCommand {
 
         if (isSolidNameTagMode(action)) {
             if (viewer != null) {
-                teams.getVisibilityManager().setSolidNameTag(player, viewer, "Processing command (solid)", !silent);
+                teams.getVisibilityManager().setSolidNameTag(player, viewer, "Processing command (opaque)", !silent);
             } else {
-                teams.getVisibilityManager().setSolidNameTag(player, null, "Processing command (solid)", !silent);
+                teams.getVisibilityManager().setSolidNameTag(player, null, "Processing command (opaque)", !silent);
             }
         } else if (action.equals("show")) {
             if (viewer != null) {
@@ -121,10 +121,15 @@ public class NameTagCommand extends SubCommand {
 
         if (action.equals("showview")) {
             teams.showNameTagVisibilityView(viewer, !silent);
+            teams.getVisibilityManager().clearSolidNameTagView(viewer, "Processing command (showview)");
+        } else if (action.equals("opaqueview")) {
+            teams.getVisibilityManager().setSolidNameTagView(viewer, "Processing command (opaqueview)", !silent);
         } else if (action.equals("hideview")) {
             teams.hideNameTagVisibilityView(viewer, !silent);
+            teams.getVisibilityManager().clearSolidNameTagView(viewer, "Processing command (hideview)");
         } else {
             teams.toggleNameTagVisibilityView(viewer, !silent);
+            teams.getVisibilityManager().clearSolidNameTagView(viewer, "Processing command (toggleview)");
         }
     }
 
@@ -155,6 +160,6 @@ public class NameTagCommand extends SubCommand {
     }
 
     private boolean isSolidNameTagMode(@NotNull String action) {
-        return action.equals("solid") || action.equals("normal") || action.equals("opaque");
+        return action.equals("opaque");
     }
 }

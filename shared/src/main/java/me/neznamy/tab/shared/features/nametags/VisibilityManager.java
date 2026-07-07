@@ -234,6 +234,31 @@ public class VisibilityManager extends RefreshableFeature implements JoinListene
         }, getFeatureName(), cpuReason));
     }
 
+    public void setSolidNameTagView(@NonNull TabPlayer viewer, @NonNull String cpuReason, boolean sendMessage) {
+        ensureActive();
+        getCustomThread().execute(new TimedCaughtTask(TAB.getInstance().getCpu(), () -> {
+            viewer.teamData.invisibleNameTagView = false;
+            viewer.expansionData.setNameTagVisibility(true);
+            for (TabPlayer player : nameTags.getOnlinePlayers().getPlayers()) {
+                player.teamData.setSolidNametagMode(viewer, true);
+                player.teamData.showNametag(viewer, NameTagInvisibilityReason.HIDE_COMMAND);
+                player.teamData.showNametag(viewer, NameTagInvisibilityReason.SOLID_OCCLUSION);
+                updateVisibility(player, viewer);
+            }
+            requestSolidOcclusionRefresh();
+            if (sendMessage) viewer.sendMessage(TAB.getInstance().getConfiguration().getMessages().getNameTagViewShown());
+        }, getFeatureName(), cpuReason));
+    }
+
+    public void clearSolidNameTagView(@NonNull TabPlayer viewer, @NonNull String cpuReason) {
+        ensureActive();
+        getCustomThread().execute(new TimedCaughtTask(TAB.getInstance().getCpu(), () -> {
+            for (TabPlayer player : nameTags.getOnlinePlayers().getPlayers()) {
+                clearSolidNameTagMode(player, viewer);
+            }
+        }, getFeatureName(), cpuReason));
+    }
+
     private void requestSolidOcclusionRefresh() {
         TAB.getInstance().getPlatform().runSyncGlobal(this::refreshSolidOcclusion);
     }
