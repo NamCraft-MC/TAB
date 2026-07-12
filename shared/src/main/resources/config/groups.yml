@@ -2,16 +2,16 @@
 #  tabprefix: "&0&l[&a&lOwner&0&l] &a"
 #  tagprefix: "&2&lOwner &a"
 owner:
-  tabprefix: "%namservercore_tab_head%%luckperms-prefix% "
+  tabprefix: "%luckperms-prefix% "
   tagprefix: "%luckperms-prefix% "
   customtabname: "%player%"
 Player:
-  tabprefix: "%namservercore_tab_head%&0&l[&7&lPlayer&0&l] &3"
+  tabprefix: "&0&l[&7&lPlayer&0&l] &3"
   tagprefix: "&2&lPlayer "
 
  # default settings for all groups, all groups will take properties from this section unless player's primary group overrides a specific setting
 _DEFAULT_:
-  tabprefix: "%namservercore_tab_head%%luckperms-prefix%"
+  tabprefix: "%luckperms-prefix%"
   tagprefix: "%luckperms-prefix% "
   customtabname: "%player%"
   tabsuffix: "%luckperms-suffix%"

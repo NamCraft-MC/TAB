@@ -24,6 +24,15 @@ public class ComponentConfiguration {
     /** Whether to automatically disable shadows for head components or not */
     private final boolean disableShadowForHeads;
 
+    /** Whether native player list head icons should be hidden when possible */
+    private final boolean disableNativePlayerlistHeads;
+
+    /** Whether real player list entries should be replaced by fake visible entries */
+    private final boolean fakePlayerlistEntries;
+
+    /** Whether fake player list entries can use NamServerCore's cached skin textures */
+    private final boolean fakePlayerlistUseNamServerCoreSkins;
+
     /**
      * Returns instance of this class created from given configuration section. If there are
      * issues in the configuration, console warns are printed.
@@ -35,12 +44,16 @@ public class ComponentConfiguration {
     @NotNull
     public static ComponentConfiguration fromSection(@NotNull ConfigurationSection section) {
         // Check keys
-        section.checkForUnknownKey(Arrays.asList("minimessage-support", "disable-shadow-for-heads"));
+        section.checkForUnknownKey(Arrays.asList("minimessage-support", "disable-shadow-for-heads", "disable-native-playerlist-heads",
+                "fake-playerlist-entries", "fake-playerlist-use-namservercore-skins"));
 
         return new ComponentConfiguration(
                 section,
                 section.getBoolean("minimessage-support", true),
-                section.getBoolean("disable-shadow-for-heads", true)
+                section.getBoolean("disable-shadow-for-heads", true),
+                section.getBoolean("disable-native-playerlist-heads", false),
+                section.getBoolean("fake-playerlist-entries", false),
+                section.getBoolean("fake-playerlist-use-namservercore-skins", true)
         );
     }
 }

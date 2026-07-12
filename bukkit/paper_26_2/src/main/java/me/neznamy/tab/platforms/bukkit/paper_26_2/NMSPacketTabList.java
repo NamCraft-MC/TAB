@@ -5,6 +5,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import com.mojang.authlib.properties.PropertyMap;
 import lombok.NonNull;
+import me.neznamy.tab.platforms.bukkit.NamServerCoreSkinCache;
 import me.neznamy.tab.platforms.bukkit.BukkitTabPlayer;
 import me.neznamy.tab.shared.TAB;
 import me.neznamy.tab.shared.chat.component.TabComponent;
@@ -19,6 +20,7 @@ import org.bukkit.craftbukkit.entity.CraftPlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -33,6 +35,8 @@ public class NMSPacketTabList extends TrackedTabList<BukkitTabPlayer> {
     private static final EnumSet<ClientboundPlayerInfoUpdatePacket.Action> updateListed = EnumSet.of(ClientboundPlayerInfoUpdatePacket.Action.UPDATE_LISTED);
     private static final EnumSet<ClientboundPlayerInfoUpdatePacket.Action> updateListOrder = EnumSet.of(ClientboundPlayerInfoUpdatePacket.Action.UPDATE_LIST_ORDER);
     private static final EnumSet<ClientboundPlayerInfoUpdatePacket.Action> updateHat = EnumSet.of(ClientboundPlayerInfoUpdatePacket.Action.UPDATE_HAT);
+    private final Map<UUID, UUID> fakeEntries = new HashMap<>();
+    private final NamServerCoreSkinCache namServerCoreSkinCache = new NamServerCoreSkinCache();
 
     /**
      * Constructs new instance.
@@ -46,7 +50,7 @@ public class NMSPacketTabList extends TrackedTabList<BukkitTabPlayer> {
 
     @Override
     public void removeEntry(@NonNull UUID entry) {
-        sendPacket(new ClientboundPlayerInfoRemovePacket(Collections.singletonList(entry)));
+        sendPacket(new ClientboundPlayerInfoRemovePacket(removeIds(entry)));
     }
 
     @Override
@@ -76,13 +80,13 @@ public class NMSPacketTabList extends TrackedTabList<BukkitTabPlayer> {
 
     @Override
     public void updateHat(@NonNull UUID entry, boolean showHat) {
-        sendPacket(updateHat, entry, "", null, false, 0, 0, null, 0, showHat);
+        sendPacket(updateHat, entry, "", null, false, 0, 0, null, 0, nativeHeadVisible(showHat));
     }
 
     @Override
     public void addEntry0(@NonNull Entry entry) {
         sendPacket(addPlayer, entry.getUniqueId(), entry.getName(), entry.getSkin(), entry.isListed(), entry.getLatency(),
-                entry.getGameMode(), entry.getDisplayName(), entry.getListOrder(), entry.isShowHat());
+                entry.getGameMode(), entry.getDisplayName(), entry.getListOrder(), nativeHeadVisible(entry.isShowHat()));
     }
 
     @Override
@@ -108,6 +112,21 @@ public class NMSPacketTabList extends TrackedTabList<BukkitTabPlayer> {
                 return new ClientboundTabListPacket(header.convert(), footer.convert());
             }
         }
+        if (packet instanceof ClientboundPlayerInfoRemovePacket remove) {
+            if (fakePlayerlistEntries()) {
+                List<UUID> ids = new ArrayList<>();
+                boolean rewritePacket = false;
+                for (UUID id : remove.profileIds()) {
+                    ids.add(id);
+                    UUID fake = fakeEntries.remove(id);
+                    if (fake != null) {
+                        ids.add(fake);
+                        rewritePacket = true;
+                    }
+                }
+                if (rewritePacket) return new ClientboundPlayerInfoRemovePacket(ids);
+            }
+        }
         if (packet instanceof ClientboundPlayerInfoUpdatePacket info) {
             EnumSet<ClientboundPlayerInfoUpdatePacket.Action> actions = info.actions();
             List<ClientboundPlayerInfoUpdatePacket.Entry> updatedList = new ArrayList<>();
@@ -118,6 +137,7 @@ public class NMSPacketTabList extends TrackedTabList<BukkitTabPlayer> {
                 int latency = nmsData.latency();
                 int gameMode = nmsData.gameMode().getId();
                 boolean listed = nmsData.listed();
+                boolean showHat = nmsData.showHat();
                 if (actions.contains(ClientboundPlayerInfoUpdatePacket.Action.UPDATE_DISPLAY_NAME)) {
                     TabComponent forcedDisplayName = getForcedDisplayNames().get(nmsData.profileId());
                     if (forcedDisplayName != null && forcedDisplayName.convert() != displayName) {
@@ -146,9 +166,22 @@ public class NMSPacketTabList extends TrackedTabList<BukkitTabPlayer> {
                 if (actions.contains(ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER)) {
                     TAB.getInstance().getFeatureManager().onEntryAdd(player, nmsData.profileId(), nmsData.profile().name());
                 }
+                if (hideNativePlayerlistHeads()
+                        && (actions.contains(ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER)
+                        || actions.contains(ClientboundPlayerInfoUpdatePacket.Action.UPDATE_HAT))
+                        && showHat) {
+                    showHat = false;
+                    rewriteEntry = rewritePacket = true;
+                }
+                if (shouldReplaceWithFakeEntry(nmsData.profileId())) {
+                    addRealAndFakeEntries(updatedList, actions, nmsData.profileId(), nmsData.profile(), listed, latency,
+                            gameMode, displayName, showHat, nmsData.listOrder(), nmsData.chatSession());
+                    rewritePacket = true;
+                    continue;
+                }
                 updatedList.add(rewriteEntry ? new ClientboundPlayerInfoUpdatePacket.Entry(
                         nmsData.profileId(), nmsData.profile(), listed, latency, GameType.byId(gameMode), displayName,
-                        nmsData.showHat(), nmsData.listOrder(), nmsData.chatSession()
+                        showHat, nmsData.listOrder(), nmsData.chatSession()
                 ) : nmsData);
             }
             if (rewritePacket) return new ClientboundPlayerInfoUpdatePacket(actions, updatedList);
@@ -158,17 +191,24 @@ public class NMSPacketTabList extends TrackedTabList<BukkitTabPlayer> {
 
     private void sendPacket(@NonNull EnumSet<ClientboundPlayerInfoUpdatePacket.Action> action, @NonNull UUID id, @NonNull String name, @Nullable Skin skin,
                             boolean listed, int latency, int gameMode, @Nullable TabComponent displayName, int listOrder, boolean showHat) {
-        ClientboundPlayerInfoUpdatePacket packet = new ClientboundPlayerInfoUpdatePacket(action, new ClientboundPlayerInfoUpdatePacket.Entry(
-                id,
-                action.contains(ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER) ? createProfile(id, name, skin) : null,
-                listed,
-                latency,
-                GameType.byId(gameMode),
-                displayName == null ? null : displayName.convert(),
-                showHat,
-                listOrder,
-                null
-        ));
+        List<ClientboundPlayerInfoUpdatePacket.Entry> entries = new ArrayList<>();
+        if (shouldReplaceWithFakeEntry(id)) {
+            addRealAndFakeEntries(entries, action, id, action.contains(ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER) ? createProfile(id, name, skin) : null,
+                    listed, latency, gameMode, displayName == null ? null : displayName.convert(), showHat, listOrder, null);
+        } else {
+            entries.add(new ClientboundPlayerInfoUpdatePacket.Entry(
+                    id,
+                    action.contains(ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER) ? createProfile(id, name, skin) : null,
+                    listed,
+                    latency,
+                    GameType.byId(gameMode),
+                    displayName == null ? null : displayName.convert(),
+                    showHat,
+                    listOrder,
+                    null
+            ));
+        }
+        ClientboundPlayerInfoUpdatePacket packet = new ClientboundPlayerInfoUpdatePacket(action, entries);
         sendPacket(packet);
     }
 
@@ -192,6 +232,85 @@ public class NMSPacketTabList extends TrackedTabList<BukkitTabPlayer> {
         return new GameProfile(id, name, new PropertyMap(builder.build()));
     }
 
+    private void addRealAndFakeEntries(@NonNull List<ClientboundPlayerInfoUpdatePacket.Entry> list,
+                                       @NonNull EnumSet<ClientboundPlayerInfoUpdatePacket.Action> actions,
+                                       @NonNull UUID realId,
+                                       @Nullable GameProfile realProfile,
+                                       boolean listed,
+                                       int latency,
+                                       int gameMode,
+                                       @Nullable Component displayName,
+                                       boolean showHat,
+                                       int listOrder,
+                                       @Nullable net.minecraft.network.chat.RemoteChatSession.Data chatSession) {
+        boolean updatesListed = actions.contains(ClientboundPlayerInfoUpdatePacket.Action.UPDATE_LISTED)
+                || actions.contains(ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER);
+        UUID fakeId = fakeEntryId(realId);
+        list.add(new ClientboundPlayerInfoUpdatePacket.Entry(
+                realId,
+                realProfile,
+                updatesListed ? false : listed,
+                latency,
+                GameType.byId(gameMode),
+                displayName,
+                showHat,
+                listOrder,
+                chatSession
+        ));
+        list.add(new ClientboundPlayerInfoUpdatePacket.Entry(
+                fakeId,
+                actions.contains(ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER)
+                        ? createProfile(fakeId, fakeEntryName(fakeId), fakeEntrySkin(realId, realProfile))
+                        : null,
+                listed,
+                latency,
+                GameType.byId(gameMode),
+                displayName,
+                showHat,
+                listOrder,
+                null
+        ));
+    }
+
+    private boolean shouldReplaceWithFakeEntry(@NonNull UUID id) {
+        return fakePlayerlistEntries() && (fakeEntries.containsKey(id) || TAB.getInstance().getPlayerByTabListUUID(id) != null);
+    }
+
+    private List<UUID> removeIds(@NonNull UUID id) {
+        UUID fake = fakeEntries.remove(id);
+        if (fakePlayerlistEntries() && fake != null) {
+            return Arrays.asList(id, fake);
+        }
+        return Collections.singletonList(id);
+    }
+
+    @NonNull
+    private UUID fakeEntryId(@NonNull UUID realId) {
+        return fakeEntries.computeIfAbsent(realId, id -> UUID.nameUUIDFromBytes(("namcraft-tab-fake:" + id).getBytes(StandardCharsets.UTF_8)));
+    }
+
+    @NonNull
+    private String fakeEntryName(@NonNull UUID fakeId) {
+        return "nt" + fakeId.toString().replace("-", "").substring(0, 14);
+    }
+
+    @Nullable
+    private Skin fakeEntrySkin(@NonNull UUID realId, @Nullable GameProfile realProfile) {
+        Skin profileSkin = realProfile == null ? null : skinFromProfile(realProfile);
+        if (profileSkin != null) return profileSkin;
+        if (!useNamServerCoreSkins()) return null;
+        String name = realProfile == null ? "" : realProfile.name();
+        return namServerCoreSkinCache.getSkin(realId, name);
+    }
+
+    @Nullable
+    private Skin skinFromProfile(@NonNull GameProfile profile) {
+        Collection<Property> properties = profile.properties().get(TEXTURES_PROPERTY);
+        if (properties.isEmpty()) return null;
+        Property property = properties.iterator().next();
+        return new Skin(property.value(), property.signature());
+    }
+
     /**
      * Sends the packet to the player.
      *
@@ -200,5 +319,21 @@ public class NMSPacketTabList extends TrackedTabList<BukkitTabPlayer> {
      */
     private void sendPacket(@NotNull Packet<?> packet) {
         ((CraftPlayer)player.getPlayer()).getHandle().connection.send(packet);
+    }
+
+    private boolean nativeHeadVisible(boolean requested) {
+        return requested && !hideNativePlayerlistHeads();
+    }
+
+    private boolean hideNativePlayerlistHeads() {
+        return TAB.getInstance().getConfiguration().getConfig().getComponents().isDisableNativePlayerlistHeads();
+    }
+
+    private boolean fakePlayerlistEntries() {
+        return TAB.getInstance().getConfiguration().getConfig().getComponents().isFakePlayerlistEntries();
+    }
+
+    private boolean useNamServerCoreSkins() {
+        return TAB.getInstance().getConfiguration().getConfig().getComponents().isFakePlayerlistUseNamServerCoreSkins();
     }
 }

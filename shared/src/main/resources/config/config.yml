@@ -263,6 +263,9 @@ proxy-support:
 components:
   minimessage-support: true
   disable-shadow-for-heads: true
+  disable-native-playerlist-heads: false
+  fake-playerlist-entries: true
+  fake-playerlist-use-namservercore-skins: true
 
 # Internal value, do not change this
 config-version: 6

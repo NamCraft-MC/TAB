@@ -29,6 +29,9 @@ public class ModernConverter {
             Map<String, Object> components = new LinkedHashMap<>();
             components.put("minimessage-support", true);
             components.put("disable-shadow-for-heads", true);
+            components.put("disable-native-playerlist-heads", false);
+            components.put("fake-playerlist-entries", false);
+            components.put("fake-playerlist-use-namservercore-skins", true);
             config.set("components", components);
         });
         converters.put(1, config -> {
