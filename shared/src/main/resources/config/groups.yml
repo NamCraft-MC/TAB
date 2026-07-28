@@ -4,7 +4,7 @@
 owner:
   tabprefix: "%luckperms-prefix% "
   tagprefix: "%luckperms-prefix% "
-  customtabname: "%namservercore_display_name%"
+  customtabname: "%condition:namcore-display-name%"
 Player:
   tabprefix: "&0&l[&7&lPlayer&0&l] &3"
   tagprefix: "&2&lPlayer "
@@ -13,7 +13,7 @@ Player:
 _DEFAULT_:
   tabprefix: "%luckperms-prefix%"
   tagprefix: "%luckperms-prefix% "
-  customtabname: "%namservercore_display_name%"
+  customtabname: "%condition:namcore-display-name%"
   tabsuffix: "%luckperms-suffix%"
   tagsuffix: "%luckperms-suffix%"
 

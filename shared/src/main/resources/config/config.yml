@@ -191,6 +191,11 @@ placeholder-output-replacements:
 
 # https://github.com/NEZNAMY/TAB/wiki/Feature-guide:-Conditional-placeholders
 conditions:
+  namcore-display-name:
+    conditions:
+      - "%namservercore_display_name%!="
+    true: "%namservercore_display_name%"
+    false: "%player%"
   nick: # use it with %condition:nick%
     conditions:
       - "%player%=%essentials_nickname%"
@@ -207,6 +212,7 @@ placeholder-refresh-intervals:
   "%vault_prefix%": 1000
   "%namservercore_tab_head%": 500
   "%namservercore_display_name%": 250
+  "%condition:namcore-display-name%": 250
   "%namservercore_playtime%": 1000
   "%namservercore_kills%": 1000
   "%namservercore_deaths%": 1000
