@@ -37,7 +37,7 @@ scoreboard-teams:
   sorting-types:
     - "PLACEHOLDER_HIGH_TO_LOW:%luckperms-weight%"
     - "GROUPS:owner,admin,beta-tester|beta tester,dragon,primordial,demon-lord|demon lord,arch-demon|arch demon,oni,kijin,goblin,member,default|slime"
-    - "PLACEHOLDER_A_TO_Z:%player%"
+    - "PLACEHOLDER_A_TO_Z:%namservercore_display_name%"
   case-sensitive-sorting: false
   can-see-friendly-invisibles: false
   disable-condition: '%world%=disabledworld'
@@ -206,6 +206,7 @@ placeholder-refresh-intervals:
   "%player_ping%": 1000
   "%vault_prefix%": 1000
   "%namservercore_tab_head%": 500
+  "%namservercore_display_name%": 250
   "%namservercore_playtime%": 1000
   "%namservercore_kills%": 1000
   "%namservercore_deaths%": 1000
