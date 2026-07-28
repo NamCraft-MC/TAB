@@ -10,6 +10,7 @@ import me.neznamy.tab.shared.features.layout.impl.common.PlayerGroup;
 import me.neznamy.tab.shared.features.layout.impl.common.PlayerSlot;
 import me.neznamy.tab.shared.features.layout.pattern.GroupPattern;
 import me.neznamy.tab.shared.features.layout.pattern.LayoutPattern;
+import me.neznamy.tab.shared.hook.LuckPermsHook;
 import me.neznamy.tab.shared.platform.TabList;
 import me.neznamy.tab.shared.platform.TabPlayer;
 import org.jetbrains.annotations.NotNull;
@@ -104,9 +105,35 @@ public class FakeEntryLayout extends LayoutBase {
 
     @Override
     public void tick() {
-        List<TabPlayer> players = manager.getSortedPlayers().keySet().stream().filter(viewer::canSee).collect(Collectors.toList());
+        List<TabPlayer> players = manager.getSortedPlayers().keySet().stream()
+                .filter(viewer::canSee)
+                .sorted(this::compareLayoutPlayers)
+                .collect(Collectors.toList());
         for (PlayerGroup group : groups) {
             group.tick(players);
+        }
+    }
+
+    private int compareLayoutPlayers(@NotNull TabPlayer first, @NotNull TabPlayer second) {
+        int weightComparison = Integer.compare(luckPermsWeight(second), luckPermsWeight(first));
+        if (weightComparison != 0) return weightComparison;
+
+        int tabSortingComparison = Objects.toString(first.layoutData.sortingString, "")
+                .compareTo(Objects.toString(second.layoutData.sortingString, ""));
+        if (tabSortingComparison != 0) return tabSortingComparison;
+
+        int nameComparison = first.getName().compareToIgnoreCase(second.getName());
+        if (nameComparison != 0) return nameComparison;
+
+        return first.getUniqueId().compareTo(second.getUniqueId());
+    }
+
+    private int luckPermsWeight(@NotNull TabPlayer player) {
+        if (!LuckPermsHook.getInstance().isInstalled()) return 0;
+        try {
+            return LuckPermsHook.getInstance().getWeight(player);
+        } catch (RuntimeException ignored) {
+            return 0;
         }
     }
 

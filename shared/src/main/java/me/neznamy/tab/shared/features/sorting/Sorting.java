@@ -15,6 +15,7 @@ import me.neznamy.tab.shared.features.types.Dumpable;
 import me.neznamy.tab.shared.features.types.JoinListener;
 import me.neznamy.tab.shared.features.types.Loadable;
 import me.neznamy.tab.shared.features.types.RefreshableFeature;
+import me.neznamy.tab.shared.hook.LuckPermsHook;
 import me.neznamy.tab.shared.platform.TabPlayer;
 import me.neznamy.tab.shared.util.DumpUtils;
 import org.jetbrains.annotations.NotNull;
@@ -77,6 +78,7 @@ public class Sorting extends RefreshableFeature implements SortingManager, JoinL
             if (nameTags != null) nameTags.updateTeamName(p, p.sortingData.getShortTeamName());
             if (layout != null) layout.updateTeamName(p, p.sortingData.getFullTeamName());
         }
+        updatePlayerListOrder();
     }
 
     @Override
@@ -88,11 +90,13 @@ public class Sorting extends RefreshableFeature implements SortingManager, JoinL
         for (TabPlayer all : TAB.getInstance().getOnlinePlayers()) {
             onJoin(all);
         }
+        updatePlayerListOrder();
     }
     
     @Override
     public void onJoin(@NotNull TabPlayer connectedPlayer) {
         constructTeamNames(connectedPlayer);
+        updatePlayerListOrder();
     }
     
     /**
@@ -176,6 +180,43 @@ public class Sorting extends RefreshableFeature implements SortingManager, JoinL
                 return potentialTeamName;
             }
             id++;
+        }
+    }
+
+    private void updatePlayerListOrder() {
+        List<TabPlayer> players = new ArrayList<>(Arrays.asList(TAB.getInstance().getOnlinePlayers()));
+        players.sort(this::comparePlayerListOrder);
+        TabPlayer[] viewers = TAB.getInstance().getOnlinePlayers();
+        for (int index = 0; index < players.size(); index++) {
+            TabPlayer target = players.get(index);
+            int listOrder = Integer.MAX_VALUE - index;
+            for (TabPlayer viewer : viewers) {
+                if (viewer.layoutData.currentLayout != null || !viewer.canSee(target)) continue;
+                viewer.getTabList().updateListOrder(target.getUniqueId(), listOrder);
+            }
+        }
+    }
+
+    private int comparePlayerListOrder(@NotNull TabPlayer first, @NotNull TabPlayer second) {
+        int weightComparison = Integer.compare(luckPermsWeight(second), luckPermsWeight(first));
+        if (weightComparison != 0) return weightComparison;
+
+        int sortingComparison = Objects.toString(first.sortingData.getFullTeamName(), "")
+                .compareTo(Objects.toString(second.sortingData.getFullTeamName(), ""));
+        if (sortingComparison != 0) return sortingComparison;
+
+        int nameComparison = first.getName().compareToIgnoreCase(second.getName());
+        if (nameComparison != 0) return nameComparison;
+
+        return first.getUniqueId().compareTo(second.getUniqueId());
+    }
+
+    private int luckPermsWeight(@NotNull TabPlayer player) {
+        if (!LuckPermsHook.getInstance().isInstalled()) return 0;
+        try {
+            return LuckPermsHook.getInstance().getWeight(player);
+        } catch (RuntimeException ignored) {
+            return 0;
         }
     }
 

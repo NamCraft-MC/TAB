@@ -10,6 +10,8 @@ import me.neznamy.tab.platforms.bukkit.NamServerCoreSkinCache;
 import me.neznamy.tab.platforms.bukkit.BukkitTabPlayer;
 import me.neznamy.tab.shared.TAB;
 import me.neznamy.tab.shared.chat.component.TabComponent;
+import me.neznamy.tab.shared.hook.LuckPermsHook;
+import me.neznamy.tab.shared.platform.TabPlayer;
 import me.neznamy.tab.shared.platform.decorators.TrackedTabList;
 import me.neznamy.tab.shared.util.ReflectionUtils;
 import net.minecraft.network.chat.Component;
@@ -272,11 +274,11 @@ public class NMSPacketTabList extends TrackedTabList<BukkitTabPlayer> {
         list.add(new ClientboundPlayerInfoUpdatePacket.Entry(
                 fakeId,
                 actions.contains(ClientboundPlayerInfoUpdatePacket.Action.ADD_PLAYER)
-                        ? createProfile(fakeId, fakeEntryName(fakeId), fakeEntrySkin(realId, realProfile))
+                        ? createProfile(fakeId, fakeEntryName(realId, fakeId), fakeEntrySkin(realId, realProfile))
                         : null,
                 listed,
                 latency,
-                GameType.byId(gameMode),
+                GameType.byId(visibleFakeEntryGameMode(gameMode)),
                 displayName,
                 showHat,
                 listOrder,
@@ -286,6 +288,10 @@ public class NMSPacketTabList extends TrackedTabList<BukkitTabPlayer> {
 
     private boolean shouldReplaceWithFakeEntry(@NonNull UUID id) {
         return fakePlayerlistEntries() && (fakeEntries.containsKey(id) || TAB.getInstance().getPlayerByTabListUUID(id) != null);
+    }
+
+    private int visibleFakeEntryGameMode(int gameMode) {
+        return gameMode == 3 ? 0 : gameMode;
     }
 
     private List<UUID> removeIds(@NonNull UUID id) {
@@ -302,8 +308,43 @@ public class NMSPacketTabList extends TrackedTabList<BukkitTabPlayer> {
     }
 
     @NonNull
-    private String fakeEntryName(@NonNull UUID fakeId) {
-        return "nt" + fakeId.toString().replace("-", "").substring(0, 14);
+    private String fakeEntryName(@NonNull UUID realId, @NonNull UUID fakeId) {
+        return "n" + String.format(Locale.ROOT, "%09d", fakeEntrySortNumber(realId))
+                + fakeId.toString().replace("-", "").substring(0, 5);
+    }
+
+    private int fakeEntrySortNumber(@NonNull UUID realId) {
+        TabPlayer tabPlayer = TAB.getInstance().getPlayerByTabListUUID(realId);
+        if (tabPlayer == null) return 999_999_999;
+        int weight = luckPermsWeight(tabPlayer);
+        if (weight > 0) return 499_999_999 - Math.min(499_999_999, weight);
+        return 500_000_000 + groupSortOffset(tabPlayer.getGroup());
+    }
+
+    private int luckPermsWeight(@NonNull TabPlayer tabPlayer) {
+        if (!LuckPermsHook.getInstance().isInstalled()) return 0;
+        try {
+            return Math.max(0, LuckPermsHook.getInstance().getWeight(tabPlayer));
+        } catch (RuntimeException ignored) {
+            return 0;
+        }
+    }
+
+    private int groupSortOffset(@NonNull String group) {
+        String normalized = group.toLowerCase(Locale.ROOT).replace('_', '-').replace(' ', '-');
+        if (normalized.equals("owner")) return 0;
+        if (normalized.equals("admin")) return 1_000;
+        if (normalized.equals("beta-tester")) return 2_000;
+        if (normalized.equals("dragon")) return 3_000;
+        if (normalized.equals("primordial")) return 4_000;
+        if (normalized.equals("demon-lord")) return 5_000;
+        if (normalized.equals("arch-demon")) return 6_000;
+        if (normalized.equals("oni")) return 7_000;
+        if (normalized.equals("kijin")) return 8_000;
+        if (normalized.equals("goblin")) return 9_000;
+        if (normalized.equals("member")) return 10_000;
+        if (normalized.equals("default") || normalized.equals("slime")) return 11_000;
+        return 999_999;
     }
 
     @Nullable

@@ -12,7 +12,9 @@ val brokenPlatformPaths = emptySet<String>()
 val platformPaths = setOf(
     ":bukkit",
     ":bukkit:paper_1_21_11",
-    ":bukkit:v26_1"
+    ":bukkit:paper_26_2",
+    ":bukkit:v26_1",
+    ":bukkit:v26_2"
 )
 
 val moddedPaths = emptySet<String>()

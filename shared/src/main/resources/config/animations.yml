@@ -42,10 +42,10 @@ ServerName:
 namcraft-title:
   change-interval: 250
   texts:
-  - '&e&lNamCraft SMP+'
-  - '&6&lNamCraft SMP+'
-  - '&f&lNamCraft SMP+'
-  - '&6&lNamCraft SMP+'
+  - '&e&lNamCraft Survival'
+  - '&6&lNamCraft Survival'
+  - '&f&lNamCraft Survival'
+  - '&6&lNamCraft Survival'
 namcraft-online:
   change-interval: 350
   texts:

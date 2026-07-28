@@ -35,9 +35,10 @@ scoreboard-teams:
   invisible-nametags: false
   # https://github.com/NEZNAMY/TAB/wiki/Feature-guide:-Sorting-players-in-tablist
   sorting-types:
-    - "GROUPS:owner,admin,mod,helper,builder,vip,default"
+    - "PLACEHOLDER_HIGH_TO_LOW:%luckperms-weight%"
+    - "GROUPS:owner,admin,beta-tester|beta tester,dragon,primordial,demon-lord|demon lord,arch-demon|arch demon,oni,kijin,goblin,member,default|slime"
     - "PLACEHOLDER_A_TO_Z:%player%"
-  case-sensitive-sorting: true
+  case-sensitive-sorting: false
   can-see-friendly-invisibles: false
   disable-condition: '%world%=disabledworld'
 
